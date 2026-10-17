@@ -83,7 +83,7 @@ the header `X-OTA-Token`, which must match `OTA_TOKEN` in `secrets.py`.
 | Setting | Default | Meaning |
 |---|---|---|
 | `WEB_SERVER`, `WEB_PORT` | | Server for the target and readings |
-| `OUTDOOR_LATITUDE`, `OUTDOOR_LONGITUDE` | Edmonton | Location for the outdoor temperature |
+| `OUTDOOR_LATITUDE`, `OUTDOOR_LONGITUDE` | | Location for the outdoor temperature |
 | `HEATER_POWER_WATTS` | 1500 | Only used to log R and C |
 | `SERVO_MIN_US`, `SERVO_MAX_US` | 500, 2500 | Servo pulse range |
 | `SERVO_OFF_PERCENT`, `SERVO_ON_PERCENT` | 0, 80 | Servo positions for heater off and on |
@@ -208,7 +208,8 @@ servo gets a signal for 1 second per switch only, so it doesn't buzz.
 ### 5. Testing
 
 The model and controller were tested in a 5-day simulation with a night
-setback, mild and Edmonton winter weather, and 1 °C and 0.1 °C sensors.
+setback, mild and cold winter weather (down to −30 °C), and 1 °C and
+0.1 °C sensors.
 
 - During the day the room stayed mostly within about ±0.5 °C of the
   target.
