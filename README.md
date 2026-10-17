@@ -166,7 +166,7 @@ samples, roughly two days:
 e_k &= y_k - \boldsymbol{\theta}_{k-1}^{\mathsf{T}} \mathbf{x}_k, &
 \mathbf{K}_k &= \frac{\mathbf{P}_{k-1} \mathbf{x}_k}
   {\lambda + \mathbf{x}_k^{\mathsf{T}} \mathbf{P}_{k-1} \mathbf{x}_k}, \\
-\boldsymbol{\theta}_k &= \operatorname{clamp}\bigl(
+\boldsymbol{\theta}_k &= \mathrm{clamp}\bigl(
   \boldsymbol{\theta}_{k-1} + \mathbf{K}_k e_k \bigr), &
 \mathbf{P}_k &= \tfrac{1}{\lambda} \bigl(
   \mathbf{P}_{k-1} - \mathbf{K}_k \mathbf{x}_k^{\mathsf{T}} \mathbf{P}_{k-1} \bigr)
@@ -178,7 +178,7 @@ e_k &= y_k - \boldsymbol{\theta}_{k-1}^{\mathsf{T}} \mathbf{x}_k, &
 | Outliers | skip the sample if $`\lvert e_k \rvert > 8`$ °C/h |
 | Covariance limit | skip the division by $`\lambda`$ if $`P_{11} \ge 0.01`$ or $`P_{22} \ge 4`$ |
 | Bounds | $`a \in [0.005, 1]`$ h⁻¹, $`b \in [0.05, 10]`$ °C/h |
-| Start | $`\boldsymbol{\theta}_0 = [0.05,\ 1]^{\mathsf{T}}`$, $`\mathbf{P}_0 = \operatorname{diag}(0.0025,\ 1)`$; $`\mathbf{P}`$ is kept symmetric |
+| Start | $`\boldsymbol{\theta}_0 = [0.05,\ 1]^{\mathsf{T}}`$, $`\mathbf{P}_0 = \mathrm{diag}(0.0025,\ 1)`$; $`\mathbf{P}`$ is kept symmetric |
 
 ### 4. Control law
 
