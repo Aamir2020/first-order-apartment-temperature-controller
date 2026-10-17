@@ -1,0 +1,13 @@
+# Private settings (Wi-Fi password, OTA token)
+secrets.py
+
+# Large downloads; get them from micropython.org
+*.bin
+*.tar.xz
+
+# Files the board creates
+model.json
+log.txt
+log.txt.old
+
+__pycache__/
