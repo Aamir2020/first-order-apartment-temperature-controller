@@ -65,9 +65,9 @@ SERVO_MAX_US = 2500
 
 # Requested positions:
 # 0% = heating OFF
-# 80% = heating ON
+# 100% = heating ON
 SERVO_OFF_PERCENT = 0
-SERVO_ON_PERCENT = 80
+SERVO_ON_PERCENT = 100
 
 
 # ============================================================
