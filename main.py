@@ -222,13 +222,13 @@ def get_target_temperature():
             response.close()
 
 
-def report_measurements(temperature, humidity):
+def report_measurements(temperature, humidity, heating):
     url = BASE_URL + WEB_PATH_POST
 
-    # Keep the original C application's string-valued JSON fields.
     payload = {
-        "temp": "{:.2f}".format(temperature),
-        "humidity": "{:.2f}".format(humidity)
+        "temp": round(temperature, 1),
+        "humidity": round(humidity),
+        "heating": heating
     }
 
     response = None
@@ -387,7 +387,7 @@ def main():
                 # does not stop measurements from reaching the server.
                 if temperature is not None:
                     try:
-                        report_measurements(temperature, humidity)
+                        report_measurements(temperature, humidity, heater)
                     except Exception as exc:
                         print("Report error:", exc)
 

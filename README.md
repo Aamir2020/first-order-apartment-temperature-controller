@@ -96,7 +96,8 @@ are described under [Control law](#4-control-law).
 Every 2 seconds the board reads the target with `GET /api/target?esp`,
 which must return `{"target": 21.5}`. It also sends readings with
 `POST /api/device/report`, with the body
-`{"temp": "25.50", "humidity": "9.20"}` (the values are strings).
+`{"temp": 24.4, "humidity": 46, "heating": true}`, where `heating`
+is the heater state the servo is currently set to.
 
 The outdoor temperature comes from [Open-Meteo](https://open-meteo.com/)
 every 15 minutes. It needs no API key.
