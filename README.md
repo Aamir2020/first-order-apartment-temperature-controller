@@ -5,6 +5,8 @@ target from a local web server, and switches the heater by moving a servo.
 It learns a first-order thermal model of the apartment and uses it to
 switch the heater ahead of time. Code updates are sent over Wi-Fi.
 
+![ESP32 on a breadboard above the wall thermostat, with the servo below it](setup.jpg)
+
 ## Hardware
 
 | Part | Pin | Notes |
