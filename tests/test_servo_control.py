@@ -47,6 +47,7 @@ def control_namespace():
     names = {
         "SERVO_MIN_US", "SERVO_MAX_US", "SERVO_OFF_PERCENT",
         "SERVO_ON_PERCENT", "SERVO_SETTLE_SECONDS",
+        "SERVO_OFF_SETTLE_SECONDS",
         "SERVO_OFF_REFRESH_SECONDS", "POLL_INTERVAL_SECONDS",
         "OUTDOOR_MAX_AGE_SECONDS", "OUTDOOR_REFRESH_SECONDS",
         "HEATER_POWER_WATTS", "_servo_percent", "_servo_last_command",
@@ -90,6 +91,13 @@ class ServoControlTests(unittest.TestCase):
         self.clock.ms += 60000
         self.assertTrue(self.move(0))
         self.assertEqual(self.servo.calls, [500000, 0])
+
+    def test_off_gets_three_seconds_of_drive_and_on_gets_one(self):
+        self.move(100)
+        self.assertEqual(self.clock.ms, 1000)
+        self.move(0)
+        self.assertEqual(self.clock.ms, 4000)
+        self.assertEqual(self.servo.calls, [2500000, 0, 500000, 0])
 
     def test_failed_on_move_does_not_suppress_return_to_off(self):
         self.move(0)

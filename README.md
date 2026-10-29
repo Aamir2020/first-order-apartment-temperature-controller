@@ -211,7 +211,9 @@ The heater only switches if it has been in its current state for at least
 changed. That makes this a simple model predictive controller with two
 inputs, $`u \in \{0, 1\}`$. Without an outdoor temperature it falls back
 to plain on/off control, and without a target the heater stays off. The
-servo gets a signal for 1 second per switch, then PWM stops. While OFF,
+servo gets a signal for 1 second when switching ON and 3 seconds when
+switching OFF, then PWM stops. `SERVO_OFF_SETTLE_SECONDS` controls the
+OFF drive time. While OFF,
 the command is repeated every 60 seconds so a missed move is retried.
 `SERVO_OFF_REFRESH_SECONDS` in `main.py` controls this interval. PWM errors
 clear the cached position and are retried on the next control loop.

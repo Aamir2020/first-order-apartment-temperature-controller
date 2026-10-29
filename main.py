@@ -161,6 +161,8 @@ servo = PWM(Pin(SERVO_PIN), freq=SERVO_FREQUENCY)
 
 # How long to keep sending pulses after a move before going quiet.
 SERVO_SETTLE_SECONDS = 1
+# Allow more drive time when returning the thermostat to OFF.
+SERVO_OFF_SETTLE_SECONDS = 3
 # Reassert OFF even if a previous pulse burst did not move the linkage.
 SERVO_OFF_REFRESH_SECONDS = 60
 
@@ -197,13 +199,18 @@ def set_servo_position(percent):
         (SERVO_MAX_US - SERVO_MIN_US) * percent // 100
     )
 
-    log("Servo command start: {}% | {} us | {}".format(
-        percent, pulse_us, "OFF refresh" if refresh_off else "move"
+    settle_seconds = (
+        SERVO_OFF_SETTLE_SECONDS if percent == SERVO_OFF_PERCENT
+        else SERVO_SETTLE_SECONDS
+    )
+    log("Servo command start: {}% | {} us | {} s | {}".format(
+        percent, pulse_us, settle_seconds,
+        "OFF refresh" if refresh_off else "move"
     ))
     try:
         try:
             servo.duty_ns(pulse_us * 1000)
-            time.sleep(SERVO_SETTLE_SECONDS)
+            time.sleep(settle_seconds)
         finally:
             servo.duty_ns(0)
     except Exception as exc:
