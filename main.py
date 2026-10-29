@@ -55,6 +55,7 @@ LOG_MAX_BYTES = 16 * 1024
 
 # Timing
 POLL_INTERVAL_SECONDS = 2
+HTTP_TIMEOUT_SECONDS = 5
 
 # Servo configuration
 SERVO_FREQUENCY = 50
@@ -77,8 +78,8 @@ SERVO_ON_PERCENT = 100
 def log(*args):
     """
     Print, and also append to LOG_FILE so the log can be read
-    over Wi-Fi (./ota_get.sh log.txt). Only used for model and
-    heater events, not every 2-second reading, to limit flash wear.
+    over Wi-Fi (./ota_get.sh log.txt). Used for model, heater, and
+    servo events, not every 2-second reading, to limit flash wear.
     """
     line = " ".join(str(a) for a in args)
     print(line)
@@ -160,8 +161,11 @@ servo = PWM(Pin(SERVO_PIN), freq=SERVO_FREQUENCY)
 
 # How long to keep sending pulses after a move before going quiet.
 SERVO_SETTLE_SECONDS = 1
+# Reassert OFF even if a previous pulse burst did not move the linkage.
+SERVO_OFF_REFRESH_SECONDS = 60
 
 _servo_percent = None
+_servo_last_command = None
 
 
 def set_servo_position(percent):
@@ -172,25 +176,48 @@ def set_servo_position(percent):
     SERVO_MIN_US and SERVO_MAX_US. It does not set literal
     PWM duty cycle to that percentage.
 
-    Pulses are only sent while the servo moves, then stopped, so it
-    does not buzz or draw current holding its position.
+    Send a bounded pulse burst on a change or periodic OFF refresh.
+    Completion confirms the command only; there is no position sensor.
     """
-    global _servo_percent
+    global _servo_percent, _servo_last_command
 
     percent = max(0, min(100, percent))
 
-    if percent == _servo_percent:
-        return
+    refresh_off = (
+        percent == SERVO_OFF_PERCENT
+        and percent == _servo_percent
+        and _servo_last_command is not None
+        and time.ticks_diff(time.ticks_ms(), _servo_last_command)
+        >= SERVO_OFF_REFRESH_SECONDS * 1000
+    )
+    if percent == _servo_percent and not refresh_off:
+        return False
 
     pulse_us = SERVO_MIN_US + (
         (SERVO_MAX_US - SERVO_MIN_US) * percent // 100
     )
 
-    servo.duty_ns(pulse_us * 1000)
-    time.sleep(SERVO_SETTLE_SECONDS)
-    servo.duty_ns(0)
+    log("Servo command start: {}% | {} us | {}".format(
+        percent, pulse_us, "OFF refresh" if refresh_off else "move"
+    ))
+    try:
+        try:
+            servo.duty_ns(pulse_us * 1000)
+            time.sleep(SERVO_SETTLE_SECONDS)
+        finally:
+            servo.duty_ns(0)
+    except Exception as exc:
+        # A partial move leaves the physical position unknown. Clear
+        # the cache so even a return to the old position gets pulses.
+        _servo_percent = None
+        _servo_last_command = None
+        log("Servo command failed:", exc)
+        raise
 
     _servo_percent = percent
+    _servo_last_command = time.ticks_ms()
+    log("Servo command complete: {}% (position unverified)".format(percent))
+    return True
 
 
 # ============================================================
@@ -202,7 +229,7 @@ def get_target_temperature():
     response = None
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=HTTP_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -237,7 +264,8 @@ def report_measurements(temperature, humidity, heating):
         response = requests.post(
             url,
             headers={"Content-Type": "application/json"},
-            data=json.dumps(payload)
+            data=json.dumps(payload),
+            timeout=HTTP_TIMEOUT_SECONDS
         )
 
         print("Report HTTP status:", response.status_code)
@@ -254,7 +282,7 @@ def get_outdoor_temperature():
     response = None
 
     try:
-        response = requests.get(OUTDOOR_URL)
+        response = requests.get(OUTDOOR_URL, timeout=HTTP_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -383,18 +411,44 @@ def main():
                 print("Sensor error:", exc)
 
             if wlan.isconnected():
-                # Report readings first, so a failing target request
-                # does not stop measurements from reaching the server.
+                try:
+                    target = get_target_temperature()
+                except Exception as exc:
+                    print("Target error:", exc)
+
+            if target is None:
+                # Never heat without a target from the server.
+                want = False
+            else:
+                want = controller.step(now, temperature, tout, target)
+
+            try:
+                set_servo_position(
+                    SERVO_ON_PERCENT if want else SERVO_OFF_PERCENT
+                )
+            except Exception:
+                # Report unknown rather than claiming a failed command
+                # reached its position. The next loop retries it.
+                heater = None
+            else:
+                changed = want != heater
+                heater = want
+                if changed:
+                    log(
+                        "Heating command", "ON" if heater else "OFF",
+                        "| Tin {} | Tout {} | target {}".format(
+                            controller.tin_filtered, tout, target
+                        )
+                    )
+
+            # Actuate before reporting or fetching weather. The reported
+            # state describes the last completed command, not feedback.
+            if wlan.isconnected():
                 if temperature is not None:
                     try:
                         report_measurements(temperature, humidity, heater)
                     except Exception as exc:
                         print("Report error:", exc)
-
-                try:
-                    target = get_target_temperature()
-                except Exception as exc:
-                    print("Target error:", exc)
 
                 if now >= next_outdoor_fetch:
                     try:
@@ -406,25 +460,6 @@ def main():
                         log("Outdoor temperature error:", exc)
                         # Retry in a minute rather than every loop.
                         next_outdoor_fetch = now + 60
-
-            if target is None:
-                # Never heat without a target from the server.
-                want = False
-            else:
-                want = controller.step(now, temperature, tout, target)
-
-            if want != heater:
-                heater = want
-                log(
-                    "Heating", "ON" if heater else "OFF",
-                    "| Tin {} | Tout {} | target {}".format(
-                        controller.tin_filtered, tout, target
-                    )
-                )
-
-            set_servo_position(
-                SERVO_ON_PERCENT if heater else SERVO_OFF_PERCENT
-            )
 
             if model.samples != saved_samples:
                 save_model(model)
@@ -441,7 +476,7 @@ def main():
         except Exception as exc:
             log("Control-loop error:", exc)
 
-            # The servo remains at its previous position.
+            # Physical position may be unknown after a partial move.
 
         time.sleep(POLL_INTERVAL_SECONDS)
 
