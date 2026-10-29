@@ -99,12 +99,7 @@ Every 2 seconds the board reads the target with `GET /api/target?esp`,
 which must return `{"target": 21.5}`. It also sends readings with
 `POST /api/device/report`, with the body
 `{"temp": 24.4, "humidity": 46, "heating": true}`, where `heating`
-is the last completed heater command. It is `null` if the servo command
-raised an error. There is no physical position feedback, so a completed
-command does not prove the servo or thermostat actually moved.
-
-Servo control runs before reporting and weather fetching. HTTP socket
-operations have a 5-second timeout; DNS lookup can still take longer.
+is the heater state the servo is currently set to.
 
 The outdoor temperature comes from [Open-Meteo](https://open-meteo.com/)
 every 15 minutes. It needs no API key.
@@ -211,20 +206,7 @@ The heater only switches if it has been in its current state for at least
 changed. That makes this a simple model predictive controller with two
 inputs, $`u \in \{0, 1\}`$. Without an outdoor temperature it falls back
 to plain on/off control, and without a target the heater stays off. The
-servo gets a signal for 1 second when switching ON and 3 seconds when
-switching OFF, then PWM stops. `SERVO_OFF_SETTLE_SECONDS` controls the
-OFF drive time. While OFF,
-the command is repeated every 60 seconds so a missed move is retried.
-`SERVO_OFF_REFRESH_SECONDS` in `main.py` controls this interval. PWM errors
-clear the cached position and are retried on the next control loop.
-The log records command starts, completions, and errors; completions
-are explicitly marked as position unverified.
-
-Run the servo retry and error-handling tests on a computer with:
-
-```
-python3 -m unittest discover -s tests -v
-```
+servo gets a signal for 1 second per switch only, so it doesn't buzz.
 
 ### 5. Testing
 
