@@ -87,7 +87,7 @@ the header `X-OTA-Token`, which must match `OTA_TOKEN` in `secrets.py`.
 | `WEB_SERVER`, `WEB_PORT` | | Server for the target and readings |
 | `OUTDOOR_LATITUDE`, `OUTDOOR_LONGITUDE` | | Location for the outdoor temperature |
 | `HEATER_POWER_WATTS` | 1500 | Only used to log R and C |
-| `SERVO_MIN_US`, `SERVO_MAX_US` | 500, 2500 | Servo pulse range |
+| `SERVO_MIN_US`, `SERVO_MAX_US` | 500, 2550 | Servo pulse range (experimental ON travel calibration) |
 | `SERVO_OFF_PERCENT`, `SERVO_ON_PERCENT` | 0, 100 | Servo positions for heater off and on |
 
 These are in `main.py`. The controller settings are in `thermal.py` and

@@ -61,7 +61,7 @@ SERVO_FREQUENCY = 50
 
 # Typical hobby servo pulse range; calibrate for your servo.
 SERVO_MIN_US = 500
-SERVO_MAX_US = 2500
+SERVO_MAX_US = 2550  # ON travel calibration: 50 us beyond the previous setting.
 
 # Requested positions:
 # 0% = heating OFF
