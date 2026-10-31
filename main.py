@@ -15,7 +15,7 @@ from thermal import ThermalModel, HeatingController
 # ============================================================
 
 # Signal pins on the VIN/5V header side of the ESP32 DevKit.
-DHT_PIN = 27
+DHT_PIN = 32
 SERVO_PIN = 26
 
 # Wi-Fi name and password live in secrets.py (not in git).

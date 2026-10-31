@@ -12,10 +12,10 @@ switch the heater ahead of time. Code updates are sent over Wi-Fi.
 | Part | Pin | Notes |
 |---|---|---|
 | ESP32 (generic, 4 MB) | | MicroPython v1.29, `ESP32_GENERIC-OTA` build |
-| Temperature sensor | GPIO 27 | DHT11 data format with a decimal byte (0.1 °C) |
+| Temperature sensor | GPIO 32 | DHT11 data format with a decimal byte (0.1 °C) |
 | Hobby servo signal | GPIO 26 | Moves the heater's thermostat to ON or OFF |
 
-GPIO 26 and 27 are on the VIN/5V header side of common ESP32 DevKit
+GPIO 26 and 32 are on the VIN/5V header side of common ESP32 DevKit
 boards. Follow the board's printed GPIO labels rather than counting pins;
 board variants differ. See the [Espressif pinout](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html).
 
@@ -23,7 +23,7 @@ Power off before moving wires. Connect the servo's power lead to the
 USB-powered board's VIN/5V rail, not 3V3, and connect its ground to ESP32
 GND. A separate regulated servo supply is also possible, with a common
 ground. Keep the DHT on its existing 3.3 V supply and move only its data
-wire to GPIO 27. Neither GPIO signal should be connected to 5 V; in
+wire to GPIO 32. Neither GPIO signal should be connected to 5 V; in
 particular, a DHT module powered at 5 V may pull its data line up to 5 V.
 Move the wires before deploying this pin configuration over OTA.
 
