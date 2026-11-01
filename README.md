@@ -13,22 +13,28 @@ switch the heater ahead of time. Code updates are sent over Wi-Fi.
 |---|---|---|
 | ESP32 (generic, 4 MB) | | MicroPython v1.29, `ESP32_GENERIC-OTA` build |
 | Temperature sensor | GPIO 32 | DHT11 data format with a decimal byte (0.1 °C) |
+| Temperature sensor VCC | GPIO 33 | Temporary low-current supply test; output held HIGH (about 3.3 V) |
 | Hobby servo signal | GPIO 26 | Moves the heater's thermostat to ON or OFF |
 
-GPIO 26 and 32 are on the VIN/5V header side of common ESP32 DevKit
+GPIO 26, 32, and 33 are on the VIN/5V header side of common ESP32 DevKit
 boards. Follow the board's printed GPIO labels rather than counting pins;
 board variants differ. See the [Espressif pinout](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html).
 
 Power off before moving wires. Connect the servo's power lead to the
 USB-powered board's VIN/5V rail, not 3V3, and connect its ground to ESP32
 GND. A separate regulated servo supply is also possible, with a common
-ground. Connect DHT data to GPIO 32; its internal 3.3 V pull-up is enabled.
-The DHT can use a 3.3 V or 5 V supply, but remove any external or onboard
-DATA pull-up to 5 V before powering it. Neither GPIO signal should be
-connected to 5 V. The internal pull-up is weak (typically about 45 kOhm);
+ground. For the current supply-voltage experiment, disconnect DHT VCC
+from 5 V and connect it to GPIO 33 instead. The code holds GPIO 33 HIGH
+and waits one second for the sensor to settle. This is only for the
+DHT's small load; a GPIO is not a regulated general-purpose power rail
+and must never power the servo or be connected to the 5 V rail.
+
+Connect DHT data to GPIO 32; its internal 3.3 V pull-up is enabled.
+Remove any external or onboard DATA pull-up to 5 V before powering it.
+The internal pull-up is weak (typically about 45 kOhm);
 keep the data wire short. If readings time out or fail checksums, use an
 external 4.7-10 kOhm pull-up to a regulated 3.3 V source or a suitable
-bidirectional level shifter. Another GPIO is not a regulated supply.
+bidirectional level shifter.
 Move the wires before deploying this pin configuration over OTA.
 
 Use a short USB data cable and a 5 V supply of at least 1 A. Poor cables
