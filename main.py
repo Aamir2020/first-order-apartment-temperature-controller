@@ -151,7 +151,9 @@ class DHT11WithDecimals(dht.DHT11):
         return t
 
 
-sensor = DHT11WithDecimals(Pin(DHT_PIN))
+# Pull DATA toward the ESP32's 3.3 V rail internally. Never connect an
+# external DATA pull-up to the sensor's 5 V supply.
+sensor = DHT11WithDecimals(Pin(DHT_PIN, Pin.IN, Pin.PULL_UP))
 
 # Created with no pulses (duty 0) so the servo stays still until
 # main() sets the first position. Passing duty_ns to the constructor

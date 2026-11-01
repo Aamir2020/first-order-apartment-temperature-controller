@@ -22,9 +22,13 @@ board variants differ. See the [Espressif pinout](https://docs.espressif.com/pro
 Power off before moving wires. Connect the servo's power lead to the
 USB-powered board's VIN/5V rail, not 3V3, and connect its ground to ESP32
 GND. A separate regulated servo supply is also possible, with a common
-ground. Keep the DHT on its existing 3.3 V supply and move only its data
-wire to GPIO 32. Neither GPIO signal should be connected to 5 V; in
-particular, a DHT module powered at 5 V may pull its data line up to 5 V.
+ground. Connect DHT data to GPIO 32; its internal 3.3 V pull-up is enabled.
+The DHT can use a 3.3 V or 5 V supply, but remove any external or onboard
+DATA pull-up to 5 V before powering it. Neither GPIO signal should be
+connected to 5 V. The internal pull-up is weak (typically about 45 kOhm);
+keep the data wire short. If readings time out or fail checksums, use an
+external 4.7-10 kOhm pull-up to a regulated 3.3 V source or a suitable
+bidirectional level shifter. Another GPIO is not a regulated supply.
 Move the wires before deploying this pin configuration over OTA.
 
 Use a short USB data cable and a 5 V supply of at least 1 A. Poor cables
