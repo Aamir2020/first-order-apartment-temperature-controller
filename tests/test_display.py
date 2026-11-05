@@ -13,6 +13,11 @@ class FakeScreen:
         self.frames = 0
         self.fail = False
         self.rects = []
+        self.rotation = None
+        self.text_positions = []
+
+    def rotate(self, value):
+        self.rotation = value
 
     def contrast(self, value):
         pass
@@ -20,9 +25,11 @@ class FakeScreen:
     def fill(self, value):
         self.texts.clear()
         self.rects.clear()
+        self.text_positions.clear()
 
     def text(self, value, *args):
         self.texts.append(value)
+        self.text_positions.append((value, args[0], args[1]))
 
     def fill_rect(self, *args):
         self.rects.append(args)
@@ -87,6 +94,33 @@ class DisplayTests(unittest.TestCase):
         self.addresses = [0x3D]
         self.assertTrue(self.display.update(0, 24.7))
         self.assertEqual(self.display.oled.address, 0x3D)
+
+    def test_rotation_and_status_layout_fit_panel(self):
+        self.assertTrue(self.display.update(
+            0, -20.0, target=35.0, humidity=100,
+            outdoor=-30.0, heating=False, wifi=False
+        ))
+        screen = self.display.oled
+        self.assertEqual(screen.rotation, 0)
+        self.assertIn("Target:35.0 C", screen.texts)
+        self.assertIn("RH100% Out-30.0C", screen.texts)
+        self.assertIn("Heat:OFF WiFi:NO", screen.texts)
+        for text, x, y in screen.text_positions:
+            self.assertLessEqual(x + len(text) * 8, 128)
+            self.assertLessEqual(y + 8, 64)
+        for x, y, width, height, color in screen.rects:
+            self.assertLessEqual(x + width, 128)
+            self.assertLessEqual(y + height, 34)
+
+    def test_unknown_fields_and_reconnected_rotation(self):
+        self.assertTrue(self.display.update(0, None))
+        self.assertIn("Target:-- C", self.display.oled.texts)
+        self.assertIn("RH--% Out--C", self.display.oled.texts)
+        self.assertIn("Heat:--- WiFi:--", self.display.oled.texts)
+        self.display.oled.fail = True
+        self.assertFalse(self.display.update(2, 24.0))
+        self.assertTrue(self.display.update(62, 24.0))
+        self.assertEqual(self.display.oled.rotation, 0)
 
     def test_missing_display_backs_off_and_recovers(self):
         self.addresses = []

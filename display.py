@@ -28,6 +28,9 @@ class TemperatureDisplay:
             raise OSError("OLED not found; I2C addresses: {}".format(addresses))
 
         self.oled = SSD1306_I2C(128, 64, bus, addr=address)
+        # The upstream driver's default uses reversed COM/SEG mapping;
+        # zero reverses both again, rotating the whole panel 180 degrees.
+        self.oled.rotate(0)
         self.oled.contrast(64)
         self.glyphs = framebuf.FrameBuffer(
             bytearray(64), 64, 8, framebuf.MONO_HLSB
@@ -37,7 +40,8 @@ class TemperatureDisplay:
             address, self.sda, self.scl
         ))
 
-    def update(self, now, temperature):
+    def update(self, now, temperature, target=None, humidity=None,
+               outdoor=None, heating=None, wifi=None):
         if self.oled is None and now < self.retry_at:
             return False
 
@@ -49,7 +53,7 @@ class TemperatureDisplay:
             oled.fill(0)
             oled.text("TEMPERATURE", 0, 0, 1)
             if temperature is None:
-                oled.text("Sensor error", 0, 28, 1)
+                oled.text("Sensor error", 0, 18, 1)
             else:
                 # Scale the built-in font 2x so the reading is legible
                 # on a 0.96-inch panel without a separate font file.
@@ -59,8 +63,17 @@ class TemperatureDisplay:
                 for y in range(8):
                     for x in range(min(64, len(value) * 8)):
                         if self.glyphs.pixel(x, y):
-                            oled.fill_rect(x * 2, 26 + y * 2, 2, 2, 1)
-                oled.text("C", 116, 30, 1)
+                            oled.fill_rect(x * 2, 14 + y * 2, 2, 2, 1)
+                oled.text("C", 116, 18, 1)
+
+            target_text = "--" if target is None else "{:.1f}".format(target)
+            humidity_text = "--" if humidity is None else "{:.0f}".format(humidity)
+            outdoor_text = "--" if outdoor is None else "{:.1f}".format(outdoor)
+            heat_text = "---" if heating is None else "ON" if heating else "OFF"
+            wifi_text = "--" if wifi is None else "OK" if wifi else "NO"
+            oled.text("Target:{} C".format(target_text), 0, 34, 1)
+            oled.text("RH{}% Out{}C".format(humidity_text, outdoor_text), 0, 44, 1)
+            oled.text("Heat:{} WiFi:{}".format(heat_text, wifi_text), 0, 56, 1)
             oled.show()
 
             if self.first_frame and temperature is not None:

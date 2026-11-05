@@ -129,9 +129,12 @@ is the heater state the servo is currently set to.
 The outdoor temperature comes from [Open-Meteo](https://open-meteo.com/)
 every 15 minutes. It needs no API key.
 
-The OLED shows the current indoor sensor reading in Celsius, refreshed
-each control loop before network requests. The larger digits use the same
-temperature that is reported to the server. Sensor failures show
+The OLED is rotated 180 degrees for the current upside-down mounting.
+It shows the indoor temperature in large digits, plus the target,
+humidity (RH), outdoor temperature (Out), heater command (Heat), and Wi-Fi
+connection (OK/NO). Readings refresh after heater actuation each control
+loop. The larger digits use the same temperature that is reported to the
+server. Unknown fields show dashes. Sensor failures show
 `Sensor error`. A missing or disconnected display does not stop heating
 control; connection attempts retry after 60 seconds and are logged.
 `OLED_SDA_PIN` and `OLED_SCL_PIN` in `main.py` configure the I2C pins.

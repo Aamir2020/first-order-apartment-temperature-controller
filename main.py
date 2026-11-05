@@ -367,6 +367,7 @@ def main():
                 tout = None
 
         temperature = None
+        humidity = None
 
         try:
             # Ensure Wi-Fi is connected.
@@ -392,10 +393,6 @@ def main():
                 )
             except OSError as exc:
                 print("Sensor error:", exc)
-
-            # Show the fresh sensor reading before HTTP requests can
-            # delay the loop. Display failures are handled internally.
-            display.update(now, temperature)
 
             if wlan.isconnected():
                 # Report readings first, so a failing target request
@@ -439,6 +436,13 @@ def main():
 
             set_servo_position(
                 SERVO_ON_PERCENT if heater else SERVO_OFF_PERCENT
+            )
+
+            # Include this loop's target and completed heater command.
+            # Display failures are handled internally.
+            display.update(
+                now, temperature, target=target, humidity=humidity,
+                outdoor=tout, heating=heater, wifi=wlan.isconnected()
             )
 
             if model.samples != saved_samples:
