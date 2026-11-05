@@ -16,7 +16,6 @@ from thermal import ThermalModel, HeatingController
 
 # Signal pins on the VIN/5V header side of the ESP32 DevKit.
 DHT_PIN = 32
-DHT_POWER_PIN = 33  # Temporary low-current DHT supply test (logic HIGH).
 SERVO_PIN = 26
 
 # Wi-Fi name and password live in secrets.py (not in git).
@@ -152,9 +151,7 @@ class DHT11WithDecimals(dht.DHT11):
         return t
 
 
-# GPIO power is only for the small DHT load, never the servo. Disconnect
-# DHT VCC from 5 V before wiring it to this pin.
-dht_power = Pin(DHT_POWER_PIN, Pin.OUT, value=1)
+# The sensor is powered from the board's regulated 3V3 pin.
 time.sleep(1)  # Let the sensor settle before its first measurement.
 
 # Pull DATA toward the ESP32's 3.3 V rail internally.
