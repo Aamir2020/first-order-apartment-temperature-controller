@@ -51,9 +51,13 @@ class TemperatureDisplay:
 
             oled = self.oled
             oled.fill(0)
-            oled.text("TEMPERATURE", 0, 0, 1)
+            # Leave margins and keep every glyph inside one color band.
+            # After rotation the blue area is above the bottom 16 rows.
+            oled.text("ROOM", 4, 2, 1)
+            heat_text = "--" if heating is None else "ON" if heating else "OFF"
+            oled.text("H:" + heat_text, 84, 2, 1)
             if temperature is None:
-                oled.text("Sensor error", 0, 18, 1)
+                oled.text("Sensor error", 4, 18, 1)
             else:
                 # Scale the built-in font 2x so the reading is legible
                 # on a 0.96-inch panel without a separate font file.
@@ -63,17 +67,25 @@ class TemperatureDisplay:
                 for y in range(8):
                     for x in range(min(64, len(value) * 8)):
                         if self.glyphs.pixel(x, y):
-                            oled.fill_rect(x * 2, 14 + y * 2, 2, 2, 1)
-                oled.text("C", 116, 18, 1)
+                            oled.fill_rect(4 + x * 2, 14 + y * 2, 2, 2, 1)
+                oled.text("C", 112, 18, 1)
 
             target_text = "--" if target is None else "{:.1f}".format(target)
             humidity_text = "--" if humidity is None else "{:.0f}".format(humidity)
             outdoor_text = "--" if outdoor is None else "{:.1f}".format(outdoor)
-            heat_text = "---" if heating is None else "ON" if heating else "OFF"
-            wifi_text = "--" if wifi is None else "OK" if wifi else "NO"
-            oled.text("Target:{} C".format(target_text), 0, 34, 1)
-            oled.text("RH{}% Out{}C".format(humidity_text, outdoor_text), 0, 44, 1)
-            oled.text("Heat:{} WiFi:{}".format(heat_text, wifi_text), 0, 56, 1)
+            oled.text("Target:{} C".format(target_text), 4, 36, 1)
+
+            # Center one line in the 16-pixel green/yellow band. Alternate
+            # secondary readings rather than squeezing two rows against
+            # the panel edges or across the band boundary.
+            if int(now // 4) % 2 == 0:
+                footer = "RH{}% O{}C".format(humidity_text, outdoor_text)
+            else:
+                footer = (
+                    "WiFi --" if wifi is None else
+                    "WiFi connected" if wifi else "WiFi offline"
+                )
+            oled.text(footer, 4, 52, 1)
             oled.show()
 
             if self.first_frame and temperature is not None:

@@ -51,7 +51,7 @@ class FakeGlyphs:
         self.value = value
 
     def pixel(self, x, y):
-        return x == 0 and y == 0
+        return (x + y) % 2 == 0
 
 
 class DisplayTests(unittest.TestCase):
@@ -103,11 +103,16 @@ class DisplayTests(unittest.TestCase):
         screen = self.display.oled
         self.assertEqual(screen.rotation, 0)
         self.assertIn("Target:35.0 C", screen.texts)
-        self.assertIn("RH100% Out-30.0C", screen.texts)
-        self.assertIn("Heat:OFF WiFi:NO", screen.texts)
+        self.assertIn("RH100% O-30.0C", screen.texts)
+        self.assertIn("H:OFF", screen.texts)
         for text, x, y in screen.text_positions:
-            self.assertLessEqual(x + len(text) * 8, 128)
-            self.assertLessEqual(y + 8, 64)
+            self.assertGreaterEqual(x, 4)
+            self.assertLessEqual(x + len(text) * 8, 124)
+            if text.startswith("RH"):
+                self.assertGreaterEqual(y, 48)
+                self.assertLessEqual(y + 8, 60)
+            else:
+                self.assertLessEqual(y + 8, 48)
         for x, y, width, height, color in screen.rects:
             self.assertLessEqual(x + width, 128)
             self.assertLessEqual(y + height, 34)
@@ -115,12 +120,32 @@ class DisplayTests(unittest.TestCase):
     def test_unknown_fields_and_reconnected_rotation(self):
         self.assertTrue(self.display.update(0, None))
         self.assertIn("Target:-- C", self.display.oled.texts)
-        self.assertIn("RH--% Out--C", self.display.oled.texts)
-        self.assertIn("Heat:--- WiFi:--", self.display.oled.texts)
+        self.assertIn("RH--% O--C", self.display.oled.texts)
+        self.assertIn("H:--", self.display.oled.texts)
         self.display.oled.fail = True
         self.assertFalse(self.display.update(2, 24.0))
         self.assertTrue(self.display.update(62, 24.0))
         self.assertEqual(self.display.oled.rotation, 0)
+
+    def test_secondary_footer_alternates_within_green_band(self):
+        for now, wifi, expected in (
+            (0, True, "RH100% O-40.0C"),
+            (4, True, "WiFi connected"),
+            (6, False, "WiFi offline"),
+            (7, None, "WiFi --"),
+            (8, True, "RH100% O-40.0C"),
+        ):
+            with self.subTest(now=now, wifi=wifi):
+                self.assertTrue(self.display.update(
+                    now, -20.0, target=35.0, humidity=100,
+                    outdoor=-40.0, heating=False, wifi=wifi
+                ))
+                footer = [
+                    (text, x, y) for text, x, y in self.display.oled.text_positions
+                    if y >= 48
+                ]
+                self.assertEqual(footer, [(expected, 4, 52)])
+                self.assertLessEqual(4 + len(expected) * 8, 124)
 
     def test_missing_display_backs_off_and_recovers(self):
         self.addresses = []

@@ -130,9 +130,11 @@ The outdoor temperature comes from [Open-Meteo](https://open-meteo.com/)
 every 15 minutes. It needs no API key.
 
 The OLED is rotated 180 degrees for the current upside-down mounting.
-It shows the indoor temperature in large digits, plus the target,
-humidity (RH), outdoor temperature (Out), heater command (Heat), and Wi-Fi
-connection (OK/NO). Readings refresh after heater actuation each control
+The blue area shows indoor temperature in large digits, the target, and
+heater command (H). A line centered in the bottom green/yellow band
+alternates every four seconds between humidity/outdoor temperature
+(RH/O) and Wi-Fi status. Margins keep text away from the panel edges
+and color boundary. Readings refresh after heater actuation each control
 loop. The larger digits use the same temperature that is reported to the
 server. Unknown fields show dashes. Sensor failures show
 `Sensor error`. A missing or disconnected display does not stop heating
