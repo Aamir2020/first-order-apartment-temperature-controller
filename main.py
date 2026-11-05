@@ -9,6 +9,7 @@ import machine
 
 from machine import Pin, PWM
 from thermal import ThermalModel, HeatingController
+from display import TemperatureDisplay
 
 # ============================================================
 # Configuration
@@ -17,6 +18,8 @@ from thermal import ThermalModel, HeatingController
 # Signal pins on the VIN/5V header side of the ESP32 DevKit.
 DHT_PIN = 32
 SERVO_PIN = 26
+OLED_SDA_PIN = 25
+OLED_SCL_PIN = 27
 
 # Wi-Fi name and password live in secrets.py (not in git).
 from secrets import WIFI_SSID, WIFI_PASSWORD
@@ -325,6 +328,10 @@ def main():
     # Initialize servo to heating OFF.
     set_servo_position(SERVO_OFF_PERCENT)
 
+    display = TemperatureDisplay(
+        sda=OLED_SDA_PIN, scl=OLED_SCL_PIN, log=log
+    )
+
     model = load_model()
     controller = HeatingController(model, log=log)
     saved_samples = model.samples
@@ -385,6 +392,10 @@ def main():
                 )
             except OSError as exc:
                 print("Sensor error:", exc)
+
+            # Show the fresh sensor reading before HTTP requests can
+            # delay the loop. Display failures are handled internally.
+            display.update(now, temperature)
 
             if wlan.isconnected():
                 # Report readings first, so a failing target request

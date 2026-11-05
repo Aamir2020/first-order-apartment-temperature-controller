@@ -15,6 +15,8 @@ switch the heater ahead of time. Code updates are sent over Wi-Fi.
 | Temperature sensor | GPIO 32 | DHT11 data format with a decimal byte (0.1 °C) |
 | Temperature sensor VCC | 3V3 | Board's regulated 3.3 V supply |
 | Hobby servo signal | GPIO 26 | Moves the heater's thermostat to ON or OFF |
+| OLED VCC / GND | 3V3 / GND | 0.96-inch 128x64 I2C panel; use regulated 3.3 V |
+| OLED SDA / SCL | GPIO 25 / GPIO 27 | SSD1306-compatible, address 0x3C or 0x3D |
 
 GPIO 26 and 32 are on the VIN/5V header side of common ESP32 DevKit
 boards. Follow the board's printed GPIO labels rather than counting pins;
@@ -45,6 +47,8 @@ can drop the voltage enough to reset the ESP32 when Wi-Fi starts.
 | `boot.py` | Connects to Wi-Fi, starts the update server |
 | `main.py` | Main loop: sensor, server, heating control |
 | `thermal.py` | Thermal model and controller |
+| `display.py` | Temperature display with error recovery |
+| `ssd1306.py` | Upstream MicroPython OLED driver; license in `LICENSE.ssd1306` |
 | `ota.py` | Update server |
 | `ota_push.sh`, `ota_get.sh` | Upload files to, or download files from, the board |
 | `secrets.example.py` | Template for `secrets.py` (Wi-Fi details, update token; not in git) |
@@ -84,6 +88,7 @@ and `log.txt` (heating and model events, rotated at 16 KB).
 ```
 ./ota_push.sh                         # upload main.py and reboot
 ./ota_push.sh thermal.py main.py      # upload several files
+./ota_push.sh ssd1306.py display.py main.py  # first OLED deployment
 ./ota_get.sh                          # list files on the board
 ./ota_get.sh log.txt                  # read the log or model.json
 ESP_HOST=192.168.1.50 ./ota_push.sh   # board at another address
@@ -123,6 +128,17 @@ is the heater state the servo is currently set to.
 
 The outdoor temperature comes from [Open-Meteo](https://open-meteo.com/)
 every 15 minutes. It needs no API key.
+
+The OLED shows the current indoor sensor reading in Celsius, refreshed
+each control loop before network requests. The larger digits use the same
+temperature that is reported to the server. Sensor failures show
+`Sensor error`. A missing or disconnected display does not stop heating
+control; connection attempts retry after 60 seconds and are logged.
+`OLED_SDA_PIN` and `OLED_SCL_PIN` in `main.py` configure the I2C pins.
+The [MicroPython SSD1306 driver](https://github.com/micropython/micropython-lib/tree/master/micropython/drivers/display/ssd1306)
+is included locally so OTA installation needs no package download on the ESP32.
+
+Run display recovery tests with `python3 -m unittest discover -s tests -v`.
 
 ## How it works
 
