@@ -5,7 +5,7 @@ target from a local web server, and switches the heater by moving a servo.
 It learns a first-order thermal model of the apartment and uses it to
 switch the heater ahead of time. Code updates are sent over Wi-Fi.
 
-![ESP32 thermostat with OLED temperature display, DHT sensor, and servo actuator](thermostat-setup.jpg)
+![ESP32 thermostat with OLED temperature display, DHT sensor, and servo actuator](thermostat-oled-setup.jpg)
 
 ## Hardware
 
