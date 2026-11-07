@@ -79,13 +79,15 @@ class TemperatureDisplay:
             # secondary readings rather than squeezing two rows against
             # the panel edges or across the band boundary.
             if int(now // 4) % 2 == 0:
-                footer = "RH{}% O{}C".format(humidity_text, outdoor_text)
+                oled.text("RH{}%".format(humidity_text), 4, 52, 1)
+                outside = "O{}C".format(outdoor_text)
+                oled.text(outside, 124 - len(outside) * 8, 52, 1)
             else:
                 footer = (
                     "WiFi --" if wifi is None else
                     "WiFi connected" if wifi else "WiFi offline"
                 )
-            oled.text(footer, 4, 52, 1)
+                oled.text(footer, 4, 52, 1)
             oled.show()
 
             if self.first_frame and temperature is not None:

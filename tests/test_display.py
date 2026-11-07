@@ -103,12 +103,13 @@ class DisplayTests(unittest.TestCase):
         screen = self.display.oled
         self.assertEqual(screen.rotation, 0)
         self.assertIn("Target:35.0 C", screen.texts)
-        self.assertIn("RH100% O-30.0C", screen.texts)
+        self.assertIn("RH100%", screen.texts)
+        self.assertIn("O-30.0C", screen.texts)
         self.assertIn("H:OFF", screen.texts)
         for text, x, y in screen.text_positions:
             self.assertGreaterEqual(x, 4)
             self.assertLessEqual(x + len(text) * 8, 124)
-            if text.startswith("RH"):
+            if text.startswith(("RH", "O")):
                 self.assertGreaterEqual(y, 48)
                 self.assertLessEqual(y + 8, 60)
             else:
@@ -120,7 +121,8 @@ class DisplayTests(unittest.TestCase):
     def test_unknown_fields_and_reconnected_rotation(self):
         self.assertTrue(self.display.update(0, None))
         self.assertIn("Target:-- C", self.display.oled.texts)
-        self.assertIn("RH--% O--C", self.display.oled.texts)
+        self.assertIn("RH--%", self.display.oled.texts)
+        self.assertIn("O--C", self.display.oled.texts)
         self.assertIn("H:--", self.display.oled.texts)
         self.display.oled.fail = True
         self.assertFalse(self.display.update(2, 24.0))
@@ -129,11 +131,11 @@ class DisplayTests(unittest.TestCase):
 
     def test_secondary_footer_alternates_within_green_band(self):
         for now, wifi, expected in (
-            (0, True, "RH100% O-40.0C"),
+            (0, True, None),
             (4, True, "WiFi connected"),
             (6, False, "WiFi offline"),
             (7, None, "WiFi --"),
-            (8, True, "RH100% O-40.0C"),
+            (8, True, None),
         ):
             with self.subTest(now=now, wifi=wifi):
                 self.assertTrue(self.display.update(
@@ -144,8 +146,18 @@ class DisplayTests(unittest.TestCase):
                     (text, x, y) for text, x, y in self.display.oled.text_positions
                     if y >= 48
                 ]
-                self.assertEqual(footer, [(expected, 4, 52)])
-                self.assertLessEqual(4 + len(expected) * 8, 124)
+                if expected is None:
+                    self.assertEqual(footer, [
+                        ("RH100%", 4, 52), ("O-40.0C", 68, 52),
+                    ])
+                    # Both values fit, with a gap even at full humidity
+                    # and a negative two-digit outside temperature.
+                    left, right = footer
+                    self.assertLess(left[1] + len(left[0]) * 8, right[1])
+                    self.assertEqual(right[1] + len(right[0]) * 8, 124)
+                else:
+                    self.assertEqual(footer, [(expected, 4, 52)])
+                    self.assertLessEqual(4 + len(expected) * 8, 124)
 
     def test_missing_display_backs_off_and_recovers(self):
         self.addresses = []

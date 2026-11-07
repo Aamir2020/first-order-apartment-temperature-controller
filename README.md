@@ -133,7 +133,7 @@ The OLED is rotated 180 degrees for the current upside-down mounting.
 The blue area shows indoor temperature in large digits, the target, and
 heater command (H). A line centered in the bottom green/yellow band
 alternates every four seconds between humidity/outdoor temperature
-(RH/O) and Wi-Fi status. Margins keep text away from the panel edges
+(RH on the left, O aligned to the right) and Wi-Fi status. Margins keep text away from the panel edges
 and color boundary. Readings refresh after heater actuation each control
 loop. The larger digits use the same temperature that is reported to the
 server. Unknown fields show dashes. Sensor failures show
