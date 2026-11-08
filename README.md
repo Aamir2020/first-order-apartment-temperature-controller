@@ -275,6 +275,14 @@ setback, mild and cold winter weather (down to −30 °C), and 1 °C and
 - **Security.** Updates use plain HTTP protected only by the token. Use
   them on a trusted home network only.
 
+## Resources
+
+Resources I used for this project:
+
+- [ESP32 Pinout Reference: Which GPIO pins should you use? — Random Nerd Tutorials](https://randomnerdtutorials.com/esp32-pinout-reference-gpios/)
+- [DHT11 Humidity and Temperature Sensor datasheet — HandsOn Technology (PDF)](https://www.handsontec.com/dataspecs/sensor/DHT11%20Humidity%20Temp%20Sensor.pdf)
+- [Servo Motor: Basics, Pinout and Datasheet — Components101](https://components101.com/motors/servo-motor-basics-pinout-datasheet)
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
